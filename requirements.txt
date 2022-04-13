@@ -1,0 +1,8 @@
+twilio
+fastapi
+uvicorn
+python-dotenv
+nest_asyncio
+pyngrok
+python-multipart
+openai
