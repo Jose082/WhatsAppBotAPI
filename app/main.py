@@ -1,6 +1,5 @@
 import base64
 import io
-import matplotlib.pyplot as plt
 from matplotlib.image import imread
 from fastapi import FastAPI, Form, Response, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -52,8 +51,12 @@ app.add_middleware(
 
 
 @app.post("/image/reply")
-async def reply_chat(request: ImageRequest) -> ImageResponse:
-    encoded_image = base64.b64decode(request.image)
-    image = imread(io.BytesIO(encoded_image))
-    response = image_model.classify_image(image)
+async def reply_chat(request: ImageRequest):
+    try:
+        encoded_image = base64.b64decode(request.image)
+        image = imread(io.BytesIO(encoded_image))
+        response = image_model.classify_image(image)
+    except Exception as error:
+        return HTTPException(status_code=400, 
+                             detail=f"Error decoding the base64 image. Additional information {str(error)}")
     return response
