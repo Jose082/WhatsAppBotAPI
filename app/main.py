@@ -1,9 +1,9 @@
 import base64
 import io
-from matplotlib.image import imread
+
+from PIL import Image
 from fastapi import FastAPI, Form, Response, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from time import sleep
 
 # from twilio.rest import Client
 # from twilio.twiml.messaging_response import Message, MessagingResponse
@@ -54,9 +54,10 @@ app.add_middleware(
 async def reply_chat(request: ImageRequest):
     try:
         encoded_image = base64.b64decode(request.image)
-        image = imread(io.BytesIO(encoded_image))
-        response = image_model.classify_image(image)
+        pil_image = Image.open(io.BytesIO(encoded_image)).convert('RGB')
+        pil_image.show()
+        response = image_model.classify_image(pil_image)
     except Exception as error:
-        return HTTPException(status_code=400, 
-                             detail=f"Error decoding the base64 image. Additional information {str(error)}")
+        return HTTPException(status_code=400,
+                             detail=f"Error processing the image. Additional information {str(error)}")
     return response
