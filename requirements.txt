@@ -4,3 +4,4 @@ uvicorn
 python-dotenv
 python-multipart
 openai
+matplotlib
