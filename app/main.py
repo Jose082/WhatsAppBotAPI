@@ -22,7 +22,7 @@ app.add_middleware(
 )
 
 
-@app.post("text/reply")
+@app.post("/text/reply")
 async def reply_chat(request: Request, WaId: str = Form(...), ProfileName: str = Form(...), Body: str = Form(...)):
     response = MessagingResponse()
     validator = RequestValidator(AUTH_TOKEN)
@@ -45,6 +45,6 @@ async def reply_chat(request: Request, WaId: str = Form(...), ProfileName: str =
     return Response(content=str(response), media_type="application/xml")
 
 
-@app.post("image/reply")
+@app.post("/image/reply")
 async def reply_chat(request: Request):
     pass
