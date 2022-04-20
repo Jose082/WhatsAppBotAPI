@@ -1,21 +1,17 @@
 from fastapi import FastAPI, Form, Response, Request, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from twilio.rest import Client
 from twilio.twiml.messaging_response import Message, MessagingResponse
 from twilio.request_validator import RequestValidator
 
-from bot import GPTBot
-from configuration import ACCOUNT_SID, AUTH_TOKEN
+from app.bot import GPTBot
+from app.configuration import ACCOUNT_SID, AUTH_TOKEN
 
-from pyngrok import ngrok
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 client = Client(ACCOUNT_SID, AUTH_TOKEN)
 bot = GPTBot()
-
-public_url = ngrok.connect(5000).public_url
-print(f'Ngrok public_url: {public_url}/reply')
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,7 +22,7 @@ app.add_middleware(
 )
 
 
-@app.post("/reply")
+@app.post("text/reply")
 async def reply_chat(request: Request, WaId: str = Form(...), ProfileName: str = Form(...), Body: str = Form(...)):
     response = MessagingResponse()
     validator = RequestValidator(AUTH_TOKEN)
@@ -47,3 +43,8 @@ async def reply_chat(request: Request, WaId: str = Form(...), ProfileName: str =
 
     response.append(message)
     return Response(content=str(response), media_type="application/xml")
+
+
+@app.post("image/reply")
+async def reply_chat(request: Request):
+    pass

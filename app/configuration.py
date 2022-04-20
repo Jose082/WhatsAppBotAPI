@@ -1,5 +1,5 @@
 import os
-from constants import *
+from app.constants import *
 
 ENVIRONMENT = os.environ.get(ENVIRONMENT_KEY)
 if ENVIRONMENT == TEST_ENVIRONMENT_KEY:

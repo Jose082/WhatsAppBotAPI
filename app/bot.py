@@ -1,18 +1,17 @@
 import openai
-from configuration import OPENAI_API_TOKEN
-from constants import BOT_PROMPT, BOT_CONTINUATION, UNIQUE_ID
 import pandas as pd
 from pathlib import Path
 from pydantic.main import BaseModel
 
-from constants import CONVERSATIONS_CSV, REQUIRED, USER_NAME, MESSAGE, CHOICES, TEXT
+from app.configuration import OPENAI_API_TOKEN
+from app.constants import CONVERSATIONS_CSV, REQUIRED, USER_NAME, MESSAGE, CHOICES, TEXT, BOT_PROMPT, BOT_CONTINUATION, \
+    UNIQUE_ID
 
 
 class Conversation(BaseModel):
     unique_id: str
     user_name: str
     message: str
-    # is_finished: bool
 
 
 class Conversations:
