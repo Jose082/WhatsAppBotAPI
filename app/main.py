@@ -25,14 +25,14 @@ app.add_middleware(
 @app.post("/text/reply")
 async def reply_chat(request: Request, WaId: str = Form(...), ProfileName: str = Form(...), Body: str = Form(...)):
     response = MessagingResponse()
-    validator = RequestValidator(AUTH_TOKEN)
-    form_request = await request.form()
-    if not validator.validate(
-        str(request.url),
-        form_request,
-        request.headers.get("X-Twilio-Signature", "")
-    ):
-        raise HTTPException(status_code=400, detail="Error in Twilio Signature")
+    # validator = RequestValidator(AUTH_TOKEN)
+    # form_request = await request.form()
+    # if not validator.validate(
+    #     str(request.url),
+    #     form_request,
+    #     request.headers.get("X-Twilio-Signature", "")
+    # ):
+    #     raise HTTPException(status_code=400, detail="Error in Twilio Signature")
 
     # Process user message
     bot_response = bot.reply(unique_id=WaId, user_name=ProfileName, message=Body)
