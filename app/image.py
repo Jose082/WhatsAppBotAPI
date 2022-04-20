@@ -19,7 +19,8 @@ class ImageResponse(BaseModel):
 
 class ImageModel:
     def __init__(self):
-        self.model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
+        self.model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet152', pretrained=True)
+        self.model.eval()
         self.preprocess = transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
@@ -30,7 +31,9 @@ class ImageModel:
     def classify_image(self, image):
         input_tensor = self.preprocess(image)
         input_batch = input_tensor.unsqueeze(0)
-        output = self.model(input_batch)
+
+        with torch.no_grad():
+            output = self.model(input_batch)
         probabilities = torch.softmax(output[0], dim=0)
 
         # Read the categories
