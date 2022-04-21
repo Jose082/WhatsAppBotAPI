@@ -1,5 +1,6 @@
 import base64
 import io
+import requests
 
 from PIL import Image
 from fastapi import FastAPI, Form, Response, Request, HTTPException
@@ -26,37 +27,50 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-@app.post("/text/reply")
-async def reply_chat(request: Request, WaId: str = Form(...), ProfileName: str = Form(...), Body: str = Form(...)):
-    response = MessagingResponse()
+
+@app.post("/reply")
+async def reply_chat(request: Request):
+    tw_response = MessagingResponse()
     validator = RequestValidator(AUTH_TOKEN)
     form_request = await request.form()
     if not validator.validate(
-        str(request.url),
-        form_request,
-        request.headers.get("X-Twilio-Signature", "")
+            str(request.url),
+            form_request,
+            request.headers.get("X-Twilio-Signature", "")
     ):
         raise HTTPException(status_code=400, detail="Error in Twilio Signature")
+    if 'MediaUrl0' in form_request.keys():
+        image_url = form_request['MediaUrl0']
 
-    # Process user message
-    bot_response = bot.reply(unique_id=WaId, user_name=ProfileName, message=Body)
+        img_data = requests.get(image_url).content
+        with open('image.jpg', 'wb') as handler:
+            handler.write(img_data)
+
+        image_file = open('image.jpg', 'rb')
+        encoded_image = base64.b64encode(image_file.read())
+        encoded_string = encoded_image.decode('utf-8')
+
+        try:
+            encoded_image = base64.b64decode(encoded_string)
+            pil_image = Image.open(io.BytesIO(encoded_image)).convert('RGB')
+            model_responses = image_model.classify_image(pil_image)
+            response = ""
+            for model_response in model_responses:
+                probability = model_response['probability'] * 100
+                response += f"Clase: {model_response['name'].title()} Probabilidad: {probability}% \n"
+        except Exception as error:
+            return HTTPException(status_code=400,
+                                 detail=f"Error processing the image. Additional information {str(error)}")
+
+    else:
+        whatsapp_id = form_request['WaId']
+        profile_name = form_request['ProfileName']
+        body = form_request['Body']
+        response = bot.reply(unique_id=whatsapp_id, user_name=profile_name, message=body)
 
     # Create twilio body message
     message = Message()
-    message.body(bot_response)
+    message.body(response)
 
-    response.append(message)
-    return Response(content=str(response), media_type="application/xml")
-
-
-@app.post("/image/reply")
-async def reply_chat(request: ImageRequest):
-    try:
-        encoded_image = base64.b64decode(request.image)
-        pil_image = Image.open(io.BytesIO(encoded_image)).convert('RGB')
-        pil_image.show()
-        response = image_model.classify_image(pil_image)
-    except Exception as error:
-        return HTTPException(status_code=400,
-                             detail=f"Error processing the image. Additional information {str(error)}")
-    return response
+    tw_response.append(message)
+    return Response(content=str(tw_response), media_type="application/xml")
