@@ -58,7 +58,6 @@ async def reply_chat(request: Request):
             for model_response in model_responses:
                 probability = model_response['probability'] * 100
                 response += f"Clase: {model_response['name'].title()} Probabilidad: {probability}% \n"
-                print(response)
         except Exception as error:
             return HTTPException(status_code=400,
                                  detail=f"Error processing the image. Additional information {str(error)}")
