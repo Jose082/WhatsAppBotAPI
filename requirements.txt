@@ -6,3 +6,5 @@ nest_asyncio
 pyngrok
 python-multipart
 openai
+torch
+torchvision

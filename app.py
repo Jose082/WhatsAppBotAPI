@@ -1,3 +1,9 @@
+import io
+import requests
+import base64
+from PIL import Image
+from image import ImageModel
+
 from fastapi import FastAPI, Form, Response, Request, HTTPException
 
 from twilio.rest import Client
@@ -13,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 client = Client(ACCOUNT_SID, AUTH_TOKEN)
 bot = GPTBot()
+image_model = ImageModel()
 
 public_url = ngrok.connect(5000).public_url
 print(f'Ngrok public_url: {public_url}/reply')
@@ -27,23 +34,45 @@ app.add_middleware(
 
 
 @app.post("/reply")
-async def reply_chat(request: Request, WaId: str = Form(...), ProfileName: str = Form(...), Body: str = Form(...)):
+async def reply_chat(request: Request):
     response = MessagingResponse()
     validator = RequestValidator(AUTH_TOKEN)
     form_request = await request.form()
     if not validator.validate(
-        str(request.url),
-        form_request,
-        request.headers.get("X-Twilio-Signature", "")
+            str(request.url),
+            form_request,
+            request.headers.get("X-Twilio-Signature", "")
     ):
         raise HTTPException(status_code=400, detail="Error in Twilio Signature")
+    if 'MediaUrl0' in form_request.keys():
+        image_url = form_request['MediaUrl0']
 
-    # Process user message
-    bot_response = bot.reply(unique_id=WaId, user_name=ProfileName, message=Body)
+        img_data = requests.get(image_url).content
+        with open('image.jpg', 'wb') as handler:
+            handler.write(img_data)
+
+        image_file = open('image.jpg', 'rb')
+        encoded_image = base64.b64encode(image_file.read())
+        encoded_string = encoded_image.decode('utf-8')
+
+        try:
+            encoded_image = base64.b64decode(encoded_string)
+            pil_image = Image.open(io.BytesIO(encoded_image)).convert('RGB')
+            response = str(image_model.classify_im  age(pil_image))
+        except Exception as error:
+            return HTTPException(status_code=400,
+                                 detail=f"Error processing the image. Additional information {str(error)}")
+
+    else:
+        whatsapp_id = form_request['WaId']
+        profile_name = form_request['ProfileName']
+        body = form_request['Body']
+        response = bot.reply(unique_id=whatsapp_id, user_name=profile_name, message=body)
 
     # Create twilio body message
     message = Message()
-    message.body(bot_response)
+    message.body(response)
 
     response.append(message)
     return Response(content=str(response), media_type="application/xml")
+

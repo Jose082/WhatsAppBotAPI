@@ -1,7 +1,7 @@
 import os
 from constants import *
 
-ENVIRONMENT = os.environ.get(ENVIRONMENT_KEY)
+ENVIRONMENT = os.environ.get(ENVIRONMENT_KEY, TEST_ENVIRONMENT_KEY)
 if ENVIRONMENT == TEST_ENVIRONMENT_KEY:
     from dotenv import load_dotenv
     load_dotenv()
