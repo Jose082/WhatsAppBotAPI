@@ -46,7 +46,7 @@ class ImageModel:
         for i in range(top5_prob.size(0)):
             response.append({
                 "name": categories[top5_catid[i]],
-                "precision": top5_prob[i].item()
+                "probability": top5_prob[i].item()
             })
 
         return response

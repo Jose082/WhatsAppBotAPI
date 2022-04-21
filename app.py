@@ -35,7 +35,7 @@ app.add_middleware(
 
 @app.post("/reply")
 async def reply_chat(request: Request):
-    response = MessagingResponse()
+    tw_response = MessagingResponse()
     validator = RequestValidator(AUTH_TOKEN)
     form_request = await request.form()
     if not validator.validate(
@@ -58,7 +58,11 @@ async def reply_chat(request: Request):
         try:
             encoded_image = base64.b64decode(encoded_string)
             pil_image = Image.open(io.BytesIO(encoded_image)).convert('RGB')
-            response = str(image_model.classify_im  age(pil_image))
+            model_responses = image_model.classify_image(pil_image)
+            response = ""
+            for model_response in model_responses:
+                probability = model_response['probability'] * 100
+                response += f"Clase: {model_response['name'].title()} Probabilidad: {probability}% \n"
         except Exception as error:
             return HTTPException(status_code=400,
                                  detail=f"Error processing the image. Additional information {str(error)}")
@@ -73,6 +77,5 @@ async def reply_chat(request: Request):
     message = Message()
     message.body(response)
 
-    response.append(message)
-    return Response(content=str(response), media_type="application/xml")
-
+    tw_response.append(message)
+    return Response(content=str(tw_response), media_type="application/xml")
